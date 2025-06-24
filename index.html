@@ -2,21 +2,28 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>플립 7 확률 계산기</title>
   <style>
     body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; margin: 0; padding: 2rem; color: #333; }
     .container { background: #fff; border-radius: 16px; padding: 2rem; max-width: 960px; margin: auto; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1); }
     h2, h3 { text-align: center; margin-bottom: 1rem; }
     .section { margin-top: 2rem; }
-    .card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 1rem; }
-    .card-box { background: #f9f9f9; border: 1px solid #ddd; border-radius: 10px; padding: 0.6rem; text-align: center; font-size: 1.05rem; }
-    .card-name { font-weight: bold; margin-bottom: 0.2rem; display: block; }
+    .card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(80px, 1fr)); gap: 0.7rem; }
+    .card-box { background: #f9f9f9; border: 1px solid #ddd; border-radius: 10px; padding: 0.5rem; text-align: center; font-size: 1rem; cursor: pointer; }
     .count, .probability { font-size: 0.9rem; color: #666; margin: 0.2rem 0; }
-    button { padding: 0.3rem 0.6rem; margin: 0.2rem; background-color: #4a90e2; border: none; border-radius: 6px; color: white; cursor: pointer; font-size: 0.9rem; }
+    button { padding: 0.3rem 0.5rem; margin: 0.1rem; background-color: #4a90e2; border: none; border-radius: 6px; color: white; cursor: pointer; font-size: 0.85rem; }
     button:disabled { background: #ccc; cursor: not-allowed; }
-    .toggle { display: flex; flex-direction: column; align-items: center; font-size: 1rem; }
-    .result-box { margin-top: 2rem; background: #eef5ff; padding: 1rem; border-radius: 12px; font-size: 1.3rem; text-align: center; font-weight: bold; }
+    .toggle { display: flex; flex-direction: column; align-items: center; font-size: 0.9rem; }
+    .result-box { margin-top: 2rem; background: #eef5ff; padding: 1rem; border-radius: 12px; font-size: 1.1rem; text-align: center; font-weight: bold; }
     .header-with-buttons { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+    @media (max-width: 480px) {
+      h2, h3 { font-size: 1.1rem; }
+      .container { padding: 1rem; }
+      .card-box { font-size: 0.9rem; padding: 0.4rem; }
+      .toggle { font-size: 0.9rem; }
+      .result-box { font-size: 1rem; padding: 0.8rem; }
+    }
   </style>
 </head>
 <body>
