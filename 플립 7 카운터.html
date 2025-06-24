@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>플립 7 확률 계산기</title>
+  <style>
+    body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; margin: 0; padding: 2rem; color: #333; }
+    .container { background: #fff; border-radius: 16px; padding: 2rem; max-width: 960px; margin: auto; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1); }
+    h2, h3 { text-align: center; margin-bottom: 1rem; }
+    .section { margin-top: 2rem; }
+    .card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 1rem; }
+    .card-box { background: #f9f9f9; border: 1px solid #ddd; border-radius: 10px; padding: 0.6rem; text-align: center; font-size: 1.05rem; }
+    .card-name { font-weight: bold; margin-bottom: 0.2rem; display: block; }
+    .count, .probability { font-size: 0.9rem; color: #666; margin: 0.2rem 0; }
+    button { padding: 0.3rem 0.6rem; margin: 0.2rem; background-color: #4a90e2; border: none; border-radius: 6px; color: white; cursor: pointer; font-size: 0.9rem; }
+    button:disabled { background: #ccc; cursor: not-allowed; }
+    .toggle { display: flex; flex-direction: column; align-items: center; font-size: 1rem; }
+    .result-box { margin-top: 2rem; background: #eef5ff; padding: 1rem; border-radius: 12px; font-size: 1.3rem; text-align: center; font-weight: bold; }
+    .header-with-buttons { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>🧮7️⃣ 플립 7 확률 계산</h2>
+    <div class="section">
+      <div class="header-with-buttons">
+        <h3>🃏 내가 가진 숫자 카드</h3>
+        <div>
+          <button onclick="roundReset()">🔄 라운드 종료</button>
+          <button onclick="deckReset()">🔁 덱 새로 셔플</button>
+        </div>
+      </div>
+      <div class="card-grid" id="myNumberCards"></div>
+    </div>
+    <div class="section">
+      <h3>✨ 내가 가진 액션 카드</h3>
+      <div class="card-grid" id="myActionCards"></div>
+    </div>
+    <div class="section">
+      <h3>🎁 내가 가진 보너스 카드</h3>
+      <div class="card-grid" id="myBonusCards"></div>
+    </div>
+    <div class="result-box" id="probabilityDisplay">💥 버스트 확률: 0%</div>
+  </div>
+  <script>
+    const maxCounts = {
+      ...Object.fromEntries(Array.from({ length: 13 }, (_, i) => [i.toString(), i === 0 ? 1 : i])),
+      찬스: 3, 트리플: 3, 프리즈: 3,
+      '+2': 1, '+4': 1, '+6': 1, '+8': 1, '+10': 1, 'x2': 1
+    };
+    const remainingCounts = Object.fromEntries(Object.entries(maxCounts).map(([k, v]) => [k, v]));
+    const myHand = {};
+
+    function render() {
+      const numberDiv = document.getElementById("myNumberCards");
+      const actionDiv = document.getElementById("myActionCards");
+      const bonusDiv = document.getElementById("myBonusCards");
+      numberDiv.innerHTML = actionDiv.innerHTML = bonusDiv.innerHTML = '';
+
+      let numberCardCount = 0;
+      const totalRemaining = Object.values(remainingCounts).reduce((a, b) => a + b, 0);
+
+      Object.keys(maxCounts).forEach((card) => {
+        if (!myHand[card]) myHand[card] = 0;
+        const remaining = remainingCounts[card];
+        const isNumber = !isNaN(card);
+        const isBonus = ['+2', '+4', '+6', '+8', '+10', 'x2'].includes(card);
+        const isAction = ['찬스', '트리플', '프리즈'].includes(card);
+
+        const cardBox = document.createElement("div");
+        cardBox.className = "card-box";
+        const label = document.createElement("label");
+        label.className = "toggle";
+
+        const check = document.createElement("input");
+        check.type = "checkbox";
+        check.style.transform = "scale(1.4)";
+        check.checked = myHand[card] > 0;
+        check.disabled = remaining === 0 && myHand[card] === 0;
+        check.onchange = () => {
+          if (check.checked) {
+            myHand[card]++;
+            remainingCounts[card]--;
+          } else {
+            if (myHand[card] > 0) myHand[card]--;
+            remainingCounts[card]++;
+          }
+          render();
+        };
+
+        const span = document.createElement("span");
+        span.textContent = card;
+        span.style.fontWeight = 'bold';
+
+        const countContainer = document.createElement("div");
+        countContainer.className = "count";
+        countContainer.innerHTML = `남음: ${remaining} <button onclick="decrease('${card}')">-</button>`;
+
+        const prob = document.createElement("div");
+        prob.className = "probability";
+        const probability = totalRemaining > 0 ? (remaining / totalRemaining * 100).toFixed(1) : 0;
+        prob.textContent = `확률: ${probability}%`;
+
+        label.appendChild(check);
+        label.appendChild(span);
+        label.appendChild(countContainer);
+        label.appendChild(prob);
+        cardBox.appendChild(label);
+
+        if (isNumber && !isBonus && !isAction) {
+          numberCardCount += myHand[card];
+          numberDiv.appendChild(cardBox);
+        } else if (isAction) {
+          actionDiv.appendChild(cardBox);
+        } else if (isBonus) {
+          bonusDiv.appendChild(cardBox);
+        }
+      });
+
+      if (numberCardCount >= 7) {
+        alert("숫자 카드 7장을 보유했습니다. 라운드를 종료합니다.");
+        roundReset();
+      }
+
+      updateProbability();
+    }
+
+    function decrease(card) {
+      if (remainingCounts[card] > 0) {
+        remainingCounts[card]--;
+        render();
+      }
+    }
+
+    function roundReset() {
+      Object.keys(myHand).forEach(card => myHand[card] = 0);
+      render();
+    }
+
+    function deckReset() {
+      Object.keys(maxCounts).forEach(k => {
+        remainingCounts[k] = maxCounts[k] - (myHand[k] || 0);
+      });
+      render();
+    }
+
+    function updateProbability() {
+      const totalRemaining = Object.values(remainingCounts).reduce((a, b) => a + b, 0);
+      let dangerCards = Object.entries(myHand).filter(([card, val]) => !isNaN(card) && val > 0).reduce((sum, [card]) => sum + remainingCounts[card], 0);
+
+      if (myHand['찬스'] > 0 && dangerCards > 0) dangerCards -= 1;
+
+      const burstProb = totalRemaining > 0 ? (dangerCards / totalRemaining * 100).toFixed(2) : 0;
+      const tripleProb = totalRemaining > 0 ? (1 - Math.pow((1 - dangerCards / totalRemaining), 3)) * 100 : 0;
+
+      document.getElementById("probabilityDisplay").textContent =
+        `💥 버스트 확률: ${burstProb}%${myHand['찬스'] > 0 ? ' (찬스카드 보유중)' : ''}` +
+        (myHand["트리플"] > 0 ? ` | 트리플 드로우 시 버스트 확률: ${tripleProb.toFixed(2)}%` : '');
+    }
+
+    window.onload = render;
+  </script>
+</body>
+</html>
